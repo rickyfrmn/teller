@@ -160,7 +160,7 @@
           <p>Memanggil ulang Nomor Antrian: <strong>${item.number}</strong></p>
           <p>Loket: <strong>${counter.code}</strong> (${item.calls}x)</p>
         `;
-        speak(`kami ulangi... ${verbalizeNumber(item.number)}... ${verbalizeCounter(counter.code)}`);
+        speak(`${verbalizeNumber(item.number)}... ${verbalizeCounter(counter.code)}`);
       } else {
         document.getElementById('current-call').innerHTML = `<p>Gak ada antrian buat dipanggil ulang di ${counter.code}</p>`;
         speak(`Gak ada antrian buat dipanggil ulang di ${counter.code}`);
