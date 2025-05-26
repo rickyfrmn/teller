@@ -66,8 +66,6 @@
     <div id="queue-list"></div>
   </div>
 
-  <audio id="dingdong" src="ding-dong.mp3" preload="auto"></audio>
-
   <script>
     let queue = [];
     let lastNumberA = 0;
@@ -81,37 +79,20 @@
       { id: 5, code: 'LKT-05' },
       { id: 6, code: 'LKT-06' },
       { id: 7, code: 'LKT-07' },
-      { id: 8, code: 'LKT-08' },
-      { id: 9, code: 'LKT-09' },
-      { id: 10, code: 'LKT-10' }
+      { id: 8, code: 'LKT-08' }
     ];
 
-    function getIndonesianFemaleVoice() {
-      const voices = speechSynthesis.getVoices();
-      return voices.find(v => v.lang === 'id-ID' && /female|perempuan|google/i.test(v.name)) || voices.find(v => v.lang === 'id-ID');
-    }
-
     function speak(text) {
-      const audio = document.getElementById('dingdong');
-      const voice = getIndonesianFemaleVoice();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'id-ID';
-      utterance.rate = 0.85;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      if (voice) utterance.voice = voice;
-
-      audio.play();
-      audio.onended = () => {
-        speechSynthesis.speak(utterance);
-      };
+      speechSynthesis.speak(utterance);
     }
 
     function verbalizeNumber(number) {
       const huruf = number[0];
       const angka = parseInt(number.substring(1));
       const verbal = angka === 0 ? 'nol' : angka;
-      return `Nomor antrian ${huruf}... ${verbal}`;
+      return `Nomor antrian ${huruf} ${verbal}`;
     }
 
     function verbalizeCounter(counterCode) {
@@ -133,7 +114,7 @@
 
     function callFromCounter(counterId) {
       const counter = counters.find(c => c.id === counterId);
-      const isALoket = ['01', '03', '05', '07', '09'].includes(counter.code.slice(-2));
+      const isALoket = ['01', '03', '05', '07'].includes(counter.code.slice(-2));
       const prefix = isALoket ? 'A' : 'B';
       const lastNum = isALoket ? ++lastNumberA : ++lastNumberB;
       const number = prefix + String(lastNum).padStart(3, '0');
@@ -146,7 +127,7 @@
         <p>Loket: <strong>${counter.code}</strong></p>
       `;
 
-      speak(`${verbalizeNumber(newItem.number)}... ${verbalizeCounter(counter.code)}`);
+      speak(`${verbalizeNumber(newItem.number)}, ${verbalizeCounter(counter.code)}`);
       updateQueueDisplay();
     }
 
@@ -160,7 +141,7 @@
           <p>Memanggil ulang Nomor Antrian: <strong>${item.number}</strong></p>
           <p>Loket: <strong>${counter.code}</strong> (${item.calls}x)</p>
         `;
-        speak(`kami ulangi... ${verbalizeNumber(item.number)}... ${verbalizeCounter(counter.code)}`);
+        speak(`${verbalizeNumber(item.number)}, ${verbalizeCounter(counter.code)}`);
       } else {
         document.getElementById('current-call').innerHTML = `<p>Gak ada antrian buat dipanggil ulang di ${counter.code}</p>`;
         speak(`Gak ada antrian buat dipanggil ulang di ${counter.code}`);
@@ -170,8 +151,6 @@
 
     function renderLoketButtons() {
       const container = document.getElementById('loket-buttons');
-      container.innerHTML = ''; // Fix: clear previous buttons
-
       counters.forEach(counter => {
         const wrapper = document.createElement('div');
         wrapper.className = 'loket-control';
@@ -191,10 +170,7 @@
       });
     }
 
-    window.speechSynthesis.onvoiceschanged = () => {
-      renderLoketButtons();
-    };
-
+    renderLoketButtons();
     updateQueueDisplay();
   </script>
 </body>
