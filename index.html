@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistem Antrian SPMB</title>
+  <title>Sistem Antrian SPMB - 1 Loket</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,24 +40,13 @@
     button:hover {
       background-color: #0056b3;
     }
-    .loket-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      flex-direction: column;
-    }
-    .loket-control {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Sistem Antrian SPMB</h1>
-    <div class="loket-buttons" id="loket-buttons"></div>
+    <button onclick="callNumber()">Panggil</button>
+    <button onclick="recallNumber()">Ulang</button>
     <div id="current-call"></div>
   </div>
 
@@ -70,30 +59,16 @@
 
   <script>
     let queue = [];
-    let lastNumberA = 0;
-    let lastNumberB = 0;
+    let lastNumber = 0;
 
-    const counters = [
-      { id: 1, code: 'LKT-01' },
-      { id: 2, code: 'LKT-02' },
-      { id: 3, code: 'LKT-03' },
-      { id: 4, code: 'LKT-04' },
-      { id: 5, code: 'LKT-05' },
-      { id: 6, code: 'LKT-06' },
-      { id: 7, code: 'LKT-07' },
-      { id: 8, code: 'LKT-08' },
-      { id: 9, code: 'LKT-09' },
-      { id: 10, code: 'LKT-10' }
-    ];
-
-    function getIndonesianFemaleVoice() {
+    function getIndonesianVoice() {
       const voices = speechSynthesis.getVoices();
       return voices.find(v => v.lang === 'id-ID' && /female|perempuan|google/i.test(v.name)) || voices.find(v => v.lang === 'id-ID');
     }
 
     function speak(text) {
       const audio = document.getElementById('dingdong');
-      const voice = getIndonesianFemaleVoice();
+      const voice = getIndonesianVoice();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'id-ID';
       utterance.rate = 0.85;
@@ -107,95 +82,54 @@
       };
     }
 
-    function verbalizeNumber(number) {
-      const huruf = number[0];
-      const angka = parseInt(number.substring(1));
-      const verbal = angka === 0 ? 'nol' : angka;
-      return `Nomor antrian ${huruf}... ${verbal}`;
+    function callNumber() {
+      lastNumber++;
+      const number = lastNumber;
+      const displayNumber = String(number).padStart(3, '0');
+
+      const item = { number, calls: 1 };
+      queue.push(item);
+
+      document.getElementById('current-call').innerHTML = `
+        <p>Nomor Antrian: <strong>${displayNumber}</strong></p>
+      `;
+
+      speak(`Mohon perhatian... Nomor antrian... ${number}... silakan ke loket Verifikasi`);
+      updateQueueDisplay();
     }
 
-    function verbalizeCounter(counterCode) {
-      const nomor = parseInt(counterCode.slice(-2));
-      return `silakan ke loket ${nomor}`;
+    function recallNumber() {
+      const item = [...queue].reverse().find(i => i.calls >= 1);
+      if (item) {
+        item.calls++;
+        const displayNumber = String(item.number).padStart(3, '0');
+
+        document.getElementById('current-call').innerHTML = `
+          <p>Memanggil ulang Nomor Antrian: <strong>${displayNumber}</strong> (${item.calls}x)</p>
+        `;
+        speak(`Mohon perhatian... Nomor antrian... ${item.number}... silakan ke loket verifikasi`);
+        updateQueueDisplay();
+      } else {
+        document.getElementById('current-call').innerHTML = `<p>Belum ada antrian untuk dipanggil ulang</p>`;
+        speak(`Belum ada antrian untuk dipanggil ulang`);
+      }
     }
 
     function updateQueueDisplay() {
-      const queueList = document.getElementById('queue-list');
-      queueList.innerHTML = '';
+      const list = document.getElementById('queue-list');
+      list.innerHTML = '';
       queue.forEach(item => {
+        const displayNumber = String(item.number).padStart(3, '0');
         const div = document.createElement('div');
         div.className = 'queue-item';
-        const counterLabel = item.counter ? item.counter.code + ` (dipanggil ${item.calls}x)` : 'Belum dipanggil';
-        div.innerHTML = `<span>${item.number}</span><span>${counterLabel}</span>`;
-        queueList.appendChild(div);
-      });
-    }
-
-    function callFromCounter(counterId) {
-      const counter = counters.find(c => c.id === counterId);
-      const isALoket = ['01', '03', '05', '07', '09'].includes(counter.code.slice(-2));
-      const prefix = isALoket ? 'A' : 'B';
-      const lastNum = isALoket ? ++lastNumberA : ++lastNumberB;
-      const number = prefix + String(lastNum).padStart(3, '0');
-
-      const newItem = { number, counter, calls: 1 };
-      queue.push(newItem);
-
-      document.getElementById('current-call').innerHTML = `
-        <p>Nomor Antrian: <strong>${newItem.number}</strong></p>
-        <p>Loket: <strong>${counter.code}</strong></p>
-      `;
-
-      speak(`${verbalizeNumber(newItem.number)}... ${verbalizeCounter(counter.code)}`);
-      updateQueueDisplay();
-    }
-
-    function recallFromCounter(counterId) {
-      const counter = counters.find(c => c.id === counterId);
-      let item = [...queue].reverse().find(item => item.counter?.id === counterId);
-
-      if (item) {
-        item.calls++;
-        document.getElementById('current-call').innerHTML = `
-          <p>Memanggil ulang Nomor Antrian: <strong>${item.number}</strong></p>
-          <p>Loket: <strong>${counter.code}</strong> (${item.calls}x)</p>
-        `;
-        speak(`${verbalizeNumber(item.number)}... ${verbalizeCounter(counter.code)}`);
-      } else {
-        document.getElementById('current-call').innerHTML = `<p>Gak ada antrian buat dipanggil ulang di ${counter.code}</p>`;
-        speak(`Gak ada antrian buat dipanggil ulang di ${counter.code}`);
-      }
-      updateQueueDisplay();
-    }
-
-    function renderLoketButtons() {
-      const container = document.getElementById('loket-buttons');
-      container.innerHTML = ''; // Fix: clear previous buttons
-
-      counters.forEach(counter => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'loket-control';
-
-        const callBtn = document.createElement('button');
-        callBtn.textContent = `Panggil - ${counter.code}`;
-        callBtn.onclick = () => callFromCounter(counter.id);
-
-        const recallBtn = document.createElement('button');
-        recallBtn.textContent = `Ulang - ${counter.code}`;
-        recallBtn.onclick = () => recallFromCounter(counter.id);
-
-        wrapper.appendChild(callBtn);
-        wrapper.appendChild(recallBtn);
-
-        container.appendChild(wrapper);
+        div.innerHTML = `<span>${displayNumber}</span><span>${item.calls}x dipanggil</span>`;
+        list.appendChild(div);
       });
     }
 
     window.speechSynthesis.onvoiceschanged = () => {
-      renderLoketButtons();
+      updateQueueDisplay();
     };
-
-    updateQueueDisplay();
   </script>
 </body>
 </html>
