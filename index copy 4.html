@@ -139,7 +139,9 @@
 
     // === Pengingat Suara Otomatis ===
     const reminderMessages = [
-      "Saat ini, Anda berada di... loket verifikasi berkas. Mohon, tidak jauh dari lokasi. Pastikan Anda... antri sesuai dengan nomor antrian."
+      "Saat ini Anda berada di loket verifikasi berkas. Mohon tidak jauh dari lokasi. Pastikan anda antri sesuai dengan nomor antrian."
+      // "Mohon tidak jauh dari lokasi.",
+      // "Pastikan anda antri sesuai dengan nomor antrian."
     ];
     let reminderActive = true;
     let reminderIntervalId;
@@ -148,20 +150,16 @@
       if (!reminderActive || index >= reminderMessages.length) return;
       const utterance = new SpeechSynthesisUtterance(reminderMessages[index]);
       utterance.lang = 'id-ID';
-      utterance.rate = 0.85;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      const voice = getIndonesianVoice();
-      if (voice) utterance.voice = voice;
-
       utterance.onend = () => {
         setTimeout(() => speakReminder(index + 1), 2000);
       };
+      const voice = getIndonesianVoice();
+      if (voice) utterance.voice = voice;
       speechSynthesis.speak(utterance);
     }
 
     function startReminder() {
-      speakReminder();
+      speakReminder(); // langsung saat buka
       reminderIntervalId = setInterval(() => {
         speakReminder();
       }, 10 * 60 * 1000); // 10 menit
@@ -188,10 +186,12 @@
       }
     }
 
+    // Saat semua suara siap
     window.speechSynthesis.onvoiceschanged = () => {
       updateQueueDisplay();
     };
 
+    // Mulai pengingat saat halaman dibuka
     window.onload = () => {
       startReminder();
     };
