@@ -40,19 +40,9 @@
     button:hover {
       background-color: #0056b3;
     }
-    #reminder-status {
-      margin-top: 10px;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Pengingat Loket</h2>
-    <button onclick="toggleReminder()">Nonaktifkan Pengingat</button>
-    <p id="reminder-status">🔊 Pengingat aktif</p>
-  </div>
-  
   <div class="card">
     <h1>Sistem Antrian SPMB</h1>
     <button onclick="callNumber()">Panggil</button>
@@ -137,63 +127,8 @@
       });
     }
 
-    // === Pengingat Suara Otomatis ===
-    const reminderMessages = [
-      "Saat ini Anda berada di loket verifikasi berkas.",
-      "Mohon tidak jauh dari lokasi.",
-      "Pastikan anda antri sesuai dengan nomor antrian."
-    ];
-    let reminderActive = true;
-    let reminderIntervalId;
-
-    function speakReminder(index = 0) {
-      if (!reminderActive || index >= reminderMessages.length) return;
-      const utterance = new SpeechSynthesisUtterance(reminderMessages[index]);
-      utterance.lang = 'id-ID';
-      utterance.onend = () => {
-        setTimeout(() => speakReminder(index + 1), 1000);
-      };
-      const voice = getIndonesianVoice();
-      if (voice) utterance.voice = voice;
-      speechSynthesis.speak(utterance);
-    }
-
-    function startReminder() {
-      speakReminder(); // langsung saat buka
-      reminderIntervalId = setInterval(() => {
-        speakReminder();
-      }, 10 * 60 * 1000); // 10 menit
-    }
-
-    function stopReminder() {
-      clearInterval(reminderIntervalId);
-      speechSynthesis.cancel();
-    }
-
-    function toggleReminder() {
-      reminderActive = !reminderActive;
-      const status = document.getElementById('reminder-status');
-      const btn = document.querySelector('button[onclick="toggleReminder()"]');
-
-      if (reminderActive) {
-        status.innerText = '🔊 Pengingat aktif';
-        btn.innerText = 'Nonaktifkan Pengingat';
-        startReminder();
-      } else {
-        status.innerText = '🔇 Pengingat nonaktif';
-        btn.innerText = 'Aktifkan Pengingat';
-        stopReminder();
-      }
-    }
-
-    // Saat semua suara siap
     window.speechSynthesis.onvoiceschanged = () => {
       updateQueueDisplay();
-    };
-
-    // Mulai pengingat saat halaman dibuka
-    window.onload = () => {
-      startReminder();
     };
   </script>
 </body>

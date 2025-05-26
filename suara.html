@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voice Reminder Loket</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+      background-color: #f5f5f5;
+    }
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Loket Verifikasi Berkas</h1>
+  <p id="status">🔊 Suara aktif</p>
+  <button onclick="toggleVoice()">Nonaktifkan Suara</button>
+
+  <script>
+    // Kalimat-kalimat yang akan dibacakan
+    const messages = [
+      "Saat ini Anda berada di loket verifikasi berkas.",
+      "Mohon tidak jauh dari lokasi.",
+      "Pastikan anda antri sesuai dengan nomor antrian."
+    ];
+
+    let voiceEnabled = true; // status suara aktif/tidak
+    let intervalId; // menyimpan ID interval
+
+    // Fungsi untuk bicara satu per satu dengan jeda antar kalimat
+    function speakWithDelay(messages, delay = 1500) {
+      let index = 0;
+
+      function speakNext() {
+        if (!voiceEnabled || index >= messages.length) return;
+        const msg = new SpeechSynthesisUtterance(messages[index]);
+        msg.lang = "id-ID";
+        msg.onend = () => {
+          index++;
+          if (index < messages.length) {
+            setTimeout(speakNext, delay);
+          }
+        };
+        window.speechSynthesis.speak(msg);
+      }
+
+      speakNext();
+    }
+
+    // Mulai bicara dan atur pengulangan 10 menit
+    function startSpeaking() {
+      speakWithDelay(messages); // langsung bicara
+      intervalId = setInterval(() => {
+        speakWithDelay(messages);
+      }, 10 * 60 * 1000); // setiap 10 menit (600000 ms)
+    }
+
+    // Hentikan bicara
+    function stopSpeaking() {
+      clearInterval(intervalId);
+      window.speechSynthesis.cancel();
+    }
+
+    // Tombol aktif/nonaktif suara
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      const statusText = document.getElementById("status");
+      const button = document.querySelector("button");
+
+      if (voiceEnabled) {
+        statusText.innerText = "🔊 Suara aktif";
+        button.innerText = "Nonaktifkan Suara";
+        startSpeaking();
+      } else {
+        statusText.innerText = "🔇 Suara nonaktif";
+        button.innerText = "Aktifkan Suara";
+        stopSpeaking();
+      }
+    }
+
+    // Saat halaman dimuat
+    window.onload = () => {
+      startSpeaking();
+    };
+  </script>
+</body>
+</html>
